@@ -11,7 +11,7 @@ mod commands;
 mod api;
 mod config;
 
-use commands::{memory, skills, context, reflect, chat};
+use commands::{memory, skills, context, reflect, chat, jira};
 
 /// PAM - Proactive Agentic Manager CLI
 ///
@@ -95,6 +95,12 @@ enum Commands {
     Config {
         #[command(subcommand)]
         action: ConfigAction,
+    },
+
+    /// Jira - create, list, and manage Jira tickets
+    Jira {
+        #[command(subcommand)]
+        action: JiraAction,
     },
 }
 
@@ -261,6 +267,54 @@ enum ConfigAction {
     Path,
 }
 
+#[derive(Subcommand)]
+pub enum JiraAction {
+    /// Create a new Jira ticket in the AP (PAM) project
+    Create {
+        /// Ticket title/summary
+        #[arg(short, long)]
+        summary: String,
+
+        /// Ticket description
+        #[arg(short, long)]
+        description: Option<String>,
+
+        /// Issue type: Task, Bug, Story, Epic (default: Task)
+        #[arg(short = 't', long = "type", default_value = "Task")]
+        ticket_type: Option<String>,
+
+        /// Priority: Highest, High, Medium, Low, Lowest
+        #[arg(short, long)]
+        priority: Option<String>,
+
+        /// Assignee email address
+        #[arg(short, long)]
+        assignee: Option<String>,
+    },
+
+    /// List Jira tickets
+    List {
+        /// Project key (default: AP)
+        #[arg(short, long, default_value = "AP")]
+        project: Option<String>,
+
+        /// Filter by status
+        #[arg(short, long)]
+        status: Option<String>,
+
+        /// Filter by assignee
+        #[arg(short, long)]
+        assignee: Option<String>,
+
+        /// Maximum tickets to show
+        #[arg(short, long, default_value = "20")]
+        limit: usize,
+    },
+
+    /// List available Jira projects
+    Projects,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize logging
@@ -295,6 +349,7 @@ async fn main() -> Result<()> {
         }
         Commands::Health { deep } => health_check(deep, &config).await,
         Commands::Config { action } => handle_config(action, &config),
+        Commands::Jira { action } => jira::handle(action, &config, cli.verbose).await,
     }
 }
 

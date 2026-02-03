@@ -5,3 +5,4 @@ pub mod skills;
 pub mod context;
 pub mod reflect;
 pub mod chat;
+pub mod jira;
