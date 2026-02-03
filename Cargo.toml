@@ -1,0 +1,62 @@
+[package]
+name = "pam-cli"
+version = "0.1.0"
+edition = "2021"
+authors = ["AI Garage <ai-garage@mergeworld.com>"]
+description = "PAM Chief of Staff CLI - Proactive Agentic Manager"
+repository = "https://github.com/mergeworld/pam-cli"
+license = "MIT"
+
+[dependencies]
+# CLI framework
+clap = { version = "4.4", features = ["derive", "env"] }
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Database (PostgreSQL)
+tokio-postgres = { version = "0.7", features = ["with-chrono-0_4", "with-serde_json-1"] }
+
+# Google Cloud Storage
+cloud-storage = "0.11"
+
+# Environment and config
+dotenvy = "0.15"
+dirs = "5.0"
+
+# Terminal UI
+colored = "2.1"
+indicatif = "0.17"
+dialoguer = "0.11"
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Utilities
+lazy_static = "1.4"
+rand = "0.8"
+toml = "0.8"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[[bin]]
+name = "pam"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
