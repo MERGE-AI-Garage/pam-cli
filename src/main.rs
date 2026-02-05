@@ -313,6 +313,12 @@ pub enum JiraAction {
 
     /// List available Jira projects
     Projects,
+
+    /// Close/Done a Jira ticket
+    Close {
+        /// Ticket key to close (e.g., AP-9)
+        ticket: String,
+    },
 }
 
 #[tokio::main]

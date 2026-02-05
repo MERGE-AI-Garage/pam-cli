@@ -18,6 +18,9 @@ pub async fn handle(action: JiraAction, _config: &Config, verbose: bool) -> Resu
         JiraAction::Projects => {
             projects(verbose).await
         }
+        JiraAction::Close { ticket } => {
+            close(&ticket, verbose).await
+        }
     }
 }
 
@@ -225,6 +228,54 @@ async fn projects(verbose: bool) -> Result<()> {
     if verbose {
         println!();
         println!("{}", "Use 'pam jira list -p <PROJECT>' to see tickets".dimmed());
+    }
+
+    Ok(())
+}
+
+async fn close(ticket: &str, verbose: bool) -> Result<()> {
+    println!("{}", format!("Closing Ticket: {}", ticket).bold());
+    println!("{}", "─".repeat(40));
+
+    // Build command to call Python script
+    let script_path = std::env::var("PAM_MEETING_AGENT_PATH")
+        .unwrap_or_else(|_| "/Users/sdulaney/Documents/pam-meeting-agent".to_string());
+
+    let script = format!("{}/create_jira_ticket.py", script_path);
+
+    if verbose {
+        println!("Running: python3 {} --close {}", script, ticket);
+    }
+
+    let output = Command::new("python3")
+        .arg(&script)
+        .arg("--close")
+        .arg(ticket)
+        .output()?;
+
+    if output.status.success() {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            if line.contains("Closed:") || line.contains("✅") {
+                println!("{}", line);
+            } else if line.contains("URL:") {
+                println!("  {}", line.cyan());
+            } else if line.contains("Closing") {
+                // Skip the "Closing ticket..." line
+            } else if !line.is_empty() {
+                println!("{}", line);
+            }
+        }
+    } else {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        println!("{} Failed to close ticket", "✗".red());
+        if !stderr.is_empty() {
+            println!("{}", stderr);
+        }
+        if !stdout.is_empty() {
+            println!("{}", stdout);
+        }
     }
 
     Ok(())
